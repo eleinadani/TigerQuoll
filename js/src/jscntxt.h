@@ -252,7 +252,7 @@ class NativeIterCache
 class NewObjectCache
 {
     /* Statically asserted to be equal to sizeof(JSObject_Slots16) */
-    static const unsigned MAX_OBJ_SIZE = 4 * sizeof(void*) + 16 * sizeof(Value);
+    static const unsigned MAX_OBJ_SIZE = 5 * sizeof(void*) + 16 * sizeof(Value) ; // DB: HACK: was  4 * sizeof(void*) + 16 * sizeof(Value) , but now it's 5 * sieof(void*) because the 5th pointer is for TxLog
     static inline void staticAsserts();
 
     struct Entry

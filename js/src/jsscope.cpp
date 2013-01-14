@@ -117,24 +117,38 @@ Shape::handoffTableTo(UnrootedShape shape)
 /* static */ bool
 Shape::hashify(JSContext *cx, HandleShape shape)
 {
-    AssertCanGC();
-    JS_ASSERT(!shape->hasTable());
+	//	_DB_: FIXME hashify must be thread safe
+//	PR_Lock(shape->base_->lock_);
 
-    if (!shape->ensureOwnBaseShape(cx))
-        return false;
+	// _DB_: FIXME check why this assertion fails
+//    AssertCanGC();
+//    JS_ASSERT(!shape->hasTable());
 
-    JSRuntime *rt = cx->runtime;
-    ShapeTable *table = rt->new_<ShapeTable>(shape->entryCount());
-    if (!table)
-        return false;
+	if(!shape->hasTable()) {
 
-    if (!table->init(rt, shape)) {
-        js_free(table);
-        return false;
-    }
+		if (!shape->ensureOwnBaseShape(cx)) {
+//			PR_Unlock(shape->base_->lock_);
+			return false;
+		}
 
-    shape->base()->setTable(table);
-    return true;
+		JSRuntime *rt = cx->runtime;
+		ShapeTable *table = rt->new_<ShapeTable>(shape->entryCount());
+		if (!table) {
+//			PR_Unlock(shape->base_->lock_);
+			return false;
+		}
+
+		if (!table->init(rt, shape)) {
+			js_free(table);
+//			PR_Unlock(shape->base_->lock_);
+			return false;
+		}
+
+		shape->base()->setTable(table);
+//		PR_Unlock(shape->base_->lock_);
+		return true;
+	}
+	return true;
 }
 
 /*

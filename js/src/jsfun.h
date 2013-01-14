@@ -73,9 +73,9 @@ class JSFunction : public JSObject
         } i;
         void            *nativeOrScript;
     } u;
-  private:
+//  private: _DB_ atom_ was private
     js::HeapPtrAtom  atom_;       /* name for diagnostics and decompiling */
-
+private:
     bool initializeLazyScript(JSContext *cx);
   public:
 

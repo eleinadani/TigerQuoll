@@ -974,6 +974,14 @@ CompileStatus
 mjit::CanMethodJIT(JSContext *cx, HandleScript script, jsbytecode *pc,
                    bool construct, CompileRequest request, StackFrame *frame)
 {
+	// _DB_: FIXME mjit disabled for closures with not null env
+	if(script->function() != NULL)
+		if(script->function()->getTxMetadata() != NULL)
+			if(script->function()->getTxMetadata()->skipMjit()) {
+				return Compile_Skipped;
+			}
+
+
     bool compiledOnce = false;
   checkOutput:
     if (!cx->methodJitEnabled)

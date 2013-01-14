@@ -16,6 +16,11 @@ CPPSRCS		= \
   js.cpp \
   jsoptparse.cpp \
   jsheaptools.cpp \
+  tqtxmembrane.cpp \
+  tqtxwrapper.cpp \
+  tqtxproxy.cpp \
+  tqevent.cpp \
+  tqworker.cpp \
   $(NULL)
 
 ifdef _MSC_VER

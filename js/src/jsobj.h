@@ -279,6 +279,11 @@ struct JSObject : public js::ObjectImpl
     js::types::TypeObject *makeLazyType(JSContext *cx);
 
   public:
+
+    tq::tx::VersionedLock* getTxMetadata() {
+        return _verlock;
+    }
+
     /*
      * Update the last property, keeping the number of allocated slots in sync
      * with the object's new slot span.

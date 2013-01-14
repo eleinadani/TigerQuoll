@@ -67,6 +67,13 @@
 #include <sys/wait.h>
 #endif
 
+#include "tqmainloop.h"
+#include "tqparevloop.h"
+
+tq::MainLoop* _main_loop;
+
+#include "tqjsapi.h"
+
 #if defined(XP_WIN) || defined(XP_OS2)
 #include <io.h>     /* for isatty() */
 #endif
@@ -84,6 +91,7 @@ using namespace js::cli;
 
 using mozilla::ArrayLength;
 using mozilla::Maybe;
+
 
 typedef enum JSShellExitCode {
     EXITCODE_RUNTIME_ERROR      = 3,
@@ -1341,10 +1349,22 @@ PrintInternal(JSContext *cx, unsigned argc, jsval *vp, FILE *file)
         bytes = JSStringToUTF8(cx, str);
         if (!bytes)
             return false;
-        fprintf(file, "%s%s", i ? " " : "", bytes);
+
+#ifdef PRINTTHREADNAME
+#ifdef HASPRTHREADNAME
+        fprintf(file, "[%s] %s%s", PR_GetThreadName(PR_GetCurrentThread()), i ? " " : "", bytes);
+#else
+        fprintf(file, "[xx] %s%s", i ? " " : "", bytes);
+#endif
+
 #if JS_TRACE_LOGGING
         TraceLog(TraceLogging::defaultLogger(), bytes);
 #endif
+
+#else
+    fprintf(file, "%s%s", i ? " " : "", bytes);
+#endif
+
         JS_free(cx, bytes);
     }
 
@@ -1355,10 +1375,16 @@ PrintInternal(JSContext *cx, unsigned argc, jsval *vp, FILE *file)
     return true;
 }
 
+int _tot_p = 0;
+
 static JSBool
 Print(JSContext *cx, unsigned argc, jsval *vp)
 {
+#ifdef PRINTSTDERR
+    return PrintInternal(cx, argc, vp, gErrFile);
+#else
     return PrintInternal(cx, argc, vp, gOutFile);
+#endif    
 }
 
 static JSBool
@@ -2488,7 +2514,7 @@ ThrowError(JSContext *cx, unsigned argc, jsval *vp)
     return false;
 }
 
-#define LAZY_STANDARD_CLASSES
+// #define LAZY_STANDARD_CLASSES
 
 /* A class for easily testing the inner/outer object callbacks. */
 typedef struct ComplexObject {
@@ -2920,8 +2946,9 @@ KillWatchdog()
 static void
 WatchdogMain(void *arg)
 {
+#ifdef HASPRTHREADNAME
     PR_SetCurrentThreadName("JS Watchdog");
-
+#endif    
     JSRuntime *rt = (JSRuntime *) arg;
 
     PR_Lock(gWatchdogLock);
@@ -3616,6 +3643,20 @@ GetSelfHostedValue(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static JSFunctionSpecWithHelp shell_functions[] = {
+
+    JS_FN_HELP("__rt_tx_emit_async", tq::api::Async, 1, 0,
+    "async([fun])",
+    "  Async."),
+
+    JS_FN_HELP("__rt_mark_eventual", tq::api::MarkEventual, 1, 0,
+    "markeventual([field])",
+    "  MarkEventual."),
+
+    JS_FN_HELP("__rt_register_wait_guard", tq::api::Wait, 1, 0,
+    "wait([ev])",
+    "  Wait."),
+
+
     JS_FN_HELP("version", Version, 0, 0,
 "version([number])",
 "  Get or force a script compilation version number."),
@@ -5300,6 +5341,7 @@ main(int argc, char **argv, char **envp)
         || !op.addBoolOption('b', "print-timing", "Print sub-ms runtime for each file that's run")
 #ifdef DEBUG
         || !op.addIntOption('A', "oom-after", "COUNT", "Trigger OOM after COUNT allocations", -1)
+        || !op.addIntOption('T', "max-threads", "MAX", "Run TigerQuoll with MAX parallel engine threads", 0)        
         || !op.addBoolOption('O', "print-alloc", "Print the number of allocations at exit")
 #endif
         || !op.addOptionalStringArg("script", "A script to execute (after all options)")
@@ -5401,18 +5443,90 @@ main(int argc, char **argv, char **envp)
     if (op.getBoolOption('D'))
         JS_ToggleOptions(cx, JSOPTION_PCCOUNT);
 
+#ifdef PERFSUMMARY
+    struct timeval tv;
+    struct timeval start_tv;
+    struct timeval par_tv;
+    gettimeofday(&start_tv, NULL);
+#endif
+
+    int num_threads = NUM_THREADS;
+
+    if (op.getIntOption('T') > 0)
+        num_threads = op.getIntOption('T');
+
+#ifdef PRINTTQVERSION
+    printf("[*** TQ Ver:%s (%s) ***]\n", QUOLL_V, QUOLL_CODENAME);
+    printf("[*** TQ engine threads: %d (+1) ***]\n\n", num_threads);
+#endif
+
+    _main_loop = new tq::MainLoop();
+    tq::ParEvLoop* _pev_loop = tq::InitLoop(_main_loop, num_threads);
+
     result = Shell(cx, &op, envp);
+
+#ifdef PERFSUMMARY
+    gettimeofday(&par_tv, NULL);
+#endif
+
+    JS_ClearRuntimeThread(rt);
+    // We create the main loop after executing the input script, so the first
+    // events are emitted after it has terminated
+    _main_loop->setGlobalAndContext(cx, cx->global());
+    _main_loop->runEventDisposerLoop();
+    _main_loop->emitBufferedEvents(cx);
+    _pev_loop->RunLoop();
+    _pev_loop->JoinLoop();
+    _main_loop->joinEventDisposerLoop();
+
+#ifdef TXDUMPSUMMARY
+    sleep(TXDUMPSUMMARY_LAG);
+    _main_loop->dumpStats();
+#endif
+
+#ifdef PERFSUMMARY
+    gettimeofday(&tv, NULL);
+    double elapsed_start = 0.0;
+    double elapsed_par = 0.0;
+
+    elapsed_start = (tv.tv_sec - start_tv.tv_sec) + (tv.tv_usec - start_tv.tv_usec) / 1000000.0;
+    elapsed_par = (tv.tv_sec - par_tv.tv_sec) + (tv.tv_usec - par_tv.tv_usec) / 1000000.0;
+    fprintf(stderr, "\n[TQ] Total execution time: %.2fs (in parallel loop: %.2fs)\n", (double)(elapsed_start), (double)(elapsed_par));
+
+#ifdef PERFSUMMARYCOMPACT
+    double tx_eff = (double)( (double)_main_loop->getStats()->_tx_committed / (double)_main_loop->getStats()->_tx_started );
+    fprintf(stderr, "\n--- Begin compact form ---\n");
+    fprintf(stderr, "[ threads exec.time par.exec.time tm.eff ev.emitted tx.committed tx.started tx.failed tx.rt.aborts tx.ct.aborts ]\n");
+    fprintf(stderr, "XXX %d %.3f %.3f %.2f %d %d %d %d %d %d \n",
+            num_threads,
+            (double)(elapsed_start),
+            (double)(elapsed_par),
+            (double)(tx_eff),
+            _main_loop->getStats()->_ev_started,
+            _main_loop->getStats()->_tx_committed,
+            _main_loop->getStats()->_tx_started,
+            _main_loop->getStats()->_tx_started-_main_loop->getStats()->_tx_committed,
+            _main_loop->getStats()->_tx_restarted,
+            _main_loop->getStats()->_tx_commit_failed
+    );
+    fprintf(stderr, "--- End compact form ---\n");
+#endif
+
+#endif
 
 #ifdef DEBUG
     if (OOM_printAllocationCount)
         printf("OOM max count: %u\n", OOM_counter);
 #endif
 
+    JS_SetRuntimeThread(rt);
     DestroyContext(cx, true);
-
     KillWatchdog();
-
     JS_DestroyRuntime(rt);
+
+    delete _pev_loop;
+    delete _main_loop;
+
     JS_ShutDown();
     return result;
 }

@@ -55,6 +55,7 @@ BaseShape::BaseShape(Class *clasp, JSObject *parent, uint32_t objectFlags)
     this->clasp = clasp;
     this->parent = parent;
     this->flags = objectFlags;
+    this->lock_= PR_NewLock();
 }
 
 inline
@@ -76,6 +77,7 @@ BaseShape::BaseShape(Class *clasp, JSObject *parent, uint32_t objectFlags,
         this->flags |= HAS_SETTER_OBJECT;
         GetterSetterWriteBarrierPost(compartment(), &this->setterObj);
     }
+    this->lock_= PR_NewLock();
 }
 
 inline
@@ -93,6 +95,7 @@ BaseShape::BaseShape(const StackBaseShape &base)
     if ((base.flags & HAS_SETTER_OBJECT) && base.rawSetter) {
         GetterSetterWriteBarrierPost(compartment(), &this->setterObj);
     }
+    this->lock_= PR_NewLock();
 }
 
 inline BaseShape &
@@ -156,6 +159,8 @@ StackBaseShape::updateGetterSetter(uint8_t attrs,
 inline void
 BaseShape::adoptUnowned(UnrootedUnownedBaseShape other)
 {
+	// _DB_
+	PR_Lock(this->lock_);
     /*
      * This is a base shape owned by a dictionary object, update it to reflect the
      * unowned base shape of a new last property.
@@ -173,6 +178,7 @@ BaseShape::adoptUnowned(UnrootedUnownedBaseShape other)
     setSlotSpan(span);
 
     assertConsistency();
+    PR_Unlock(this->lock_);
 }
 
 inline void

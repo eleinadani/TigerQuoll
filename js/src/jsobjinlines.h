@@ -53,6 +53,9 @@
 #include "vm/RegExpStatics-inl.h"
 #include "vm/String-inl.h"
 
+#include "shell/tqtxversionedlock.h"
+
+
 /* static */ inline bool
 JSObject::enumerate(JSContext *cx, JS::HandleObject obj, JSIterateOp iterop,
                     JS::MutableHandleValue statep, JS::MutableHandleId idp)
@@ -866,6 +869,8 @@ JSObject::create(JSContext *cx, js::gc::AllocKind kind,
     if (!obj)
         return NULL;
 
+    obj->_verlock = new tq::tx::VersionedLock();
+
     obj->shape_.init(shape);
     obj->type_.init(type);
     obj->slots = slots;
@@ -910,6 +915,8 @@ JSObject::createDenseArray(JSContext *cx, js::gc::AllocKind kind,
         js_ReportOutOfMemory(cx);
         return NULL;
     }
+
+    obj->_verlock = new tq::tx::VersionedLock();
 
     obj->shape_.init(shape);
     obj->type_.init(type);

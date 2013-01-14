@@ -14,6 +14,8 @@
 #include "jspubtd.h"
 #include "jsprvtd.h"
 
+#include "shell/tqtxversionedlock.h"
+
 /*
  * This macro checks if the stack pointer has exceeded a given limit. If
  * |tolerance| is non-zero, it returns true only if the stack pointer has
@@ -348,6 +350,10 @@ struct Object {
             return fixedSlots()[slot];
         return slots[slot - nfixed];
     }
+
+    /* _DB_ TxVersion */
+    tq::tx::VersionedLock* _verlock;
+
 };
 
 struct Function {

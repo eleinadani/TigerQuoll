@@ -1517,8 +1517,9 @@ js_CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
         if (clone->isInterpreted()) {
             RootedScript script(cx, clone->nonLazyScript());
             JS_ASSERT(script->compartment() == fun->compartment());
-            JS_ASSERT_IF(script->compartment() != cx->compartment,
-                         !script->enclosingStaticScope());
+//            _DB_ We allow cloning functinos with static scope
+//            JS_ASSERT_IF(script->compartment() != cx->compartment,
+//                         !script->enclosingStaticScope());
 
             RootedObject scope(cx, script->enclosingStaticScope());
 

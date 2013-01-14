@@ -281,6 +281,9 @@ class BaseShape : public js::gc::Cell
                                            null if shape->hasSetterValue() */
     };
 
+    // _DB_
+    PRLock* lock_;
+
     /* For owned BaseShapes, the canonical unowned BaseShape. */
     HeapPtr<UnownedBaseShape> unowned_;
 

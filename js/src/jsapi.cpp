@@ -915,7 +915,10 @@ JSRuntime::init(uint32_t maxbytes)
     JMCheckLogging();
 #endif
 
-    if (!js_InitGC(this, maxbytes))
+    // _DB_
+    int GCMult = 1000;
+
+    if (!js_InitGC(this, maxbytes * GCMult))
         return false;
 
     if (!gcMarker.init())
@@ -934,7 +937,7 @@ JSRuntime::init(uint32_t maxbytes)
     }
 
     atomsCompartment->isSystemCompartment = true;
-    atomsCompartment->setGCLastBytes(8192, 8192, GC_NORMAL);
+    atomsCompartment->setGCLastBytes(8192 * GCMult, 8192 * GCMult, GC_NORMAL);
 
     if (!InitAtoms(this))
         return false;
@@ -4881,17 +4884,19 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobjArg, JSRawObject parentArg
         return NULL;
     }
 
-    /*
-     * If a function was compiled to be lexically nested inside some other
-     * script, we cannot clone it without breaking the compiler's assumptions.
-     */
+//    _DB_ Removed: we allow to clone closures, but we wrap the environment and we disable mjit for them
+//    /*
+//     * If a function was compiled to be lexically nested inside some other
+//     * script, we cannot clone it without breaking the compiler's assumptions.
+//     */
     RootedFunction fun(cx, funobj->toFunction());
-    if (fun->isInterpreted() && (fun->nonLazyScript()->enclosingStaticScope() ||
-        (fun->nonLazyScript()->compileAndGo && !parent->isGlobal())))
-    {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_CLONE_FUNOBJ_SCOPE);
-        return NULL;
-    }
+//    if (fun->isInterpreted() && (fun->nonLazyScript()->enclosingStaticScope() ||
+//        (fun->nonLazyScript()->compileAndGo && !parent->isGlobal())))
+//    {
+//        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_CLONE_FUNOBJ_SCOPE);
+//        return NULL;
+//    }
+
 
     if (fun->isBoundFunction()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_CLONE_OBJECT);

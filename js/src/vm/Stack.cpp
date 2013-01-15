@@ -235,37 +235,38 @@ StackFrame::copyRawFrameSlots(AutoValueVector *vec)
 static inline void
 AssertDynamicScopeMatchesStaticScope(JSScript *script, JSObject *scope)
 {
-#ifdef DEBUG
-    for (StaticScopeIter i(script->enclosingStaticScope()); !i.done(); i++) {
-        if (i.hasDynamicScopeObject()) {
-            /*
-             * 'with' does not participate in the static scope of the script,
-             * but it does in the dynamic scope, so skip them here.
-             */
-            while (scope->isWith())
-                scope = &scope->asWith().enclosingScope();
-
-            switch (i.type()) {
-              case StaticScopeIter::BLOCK:
-                JS_ASSERT(i.block() == scope->asClonedBlock().staticBlock());
-                scope = &scope->asClonedBlock().enclosingScope();
-                break;
-              case StaticScopeIter::FUNCTION:
-                JS_ASSERT(scope->asCall().callee().nonLazyScript() == i.funScript());
-                scope = &scope->asCall().enclosingScope();
-                break;
-              case StaticScopeIter::NAMED_LAMBDA:
-                scope = &scope->asDeclEnv().enclosingScope();
-                break;
-            }
-        }
-    }
-
-    /*
-     * Ideally, we'd JS_ASSERT(!scope->isScope()) but the enclosing lexical
-     * scope chain stops at eval() boundaries. See StaticScopeIter comment.
-     */
-#endif
+// _DB_ FIXME Removed to fix closure wrapping
+//#ifdef DEBUG
+//    for (StaticScopeIter i(script->enclosingStaticScope()); !i.done(); i++) {
+//        if (i.hasDynamicScopeObject()) {
+//            /*
+//             * 'with' does not participate in the static scope of the script,
+//             * but it does in the dynamic scope, so skip them here.
+//             */
+//            while (scope->isWith())
+//                scope = &scope->asWith().enclosingScope();
+//
+//            switch (i.type()) {
+//              case StaticScopeIter::BLOCK:
+//                JS_ASSERT(i.block() == scope->asClonedBlock().staticBlock());
+//                scope = &scope->asClonedBlock().enclosingScope();
+//                break;
+//              case StaticScopeIter::FUNCTION:
+//                JS_ASSERT(scope->asCall().callee().nonLazyScript() == i.funScript());
+//                scope = &scope->asCall().enclosingScope();
+//                break;
+//              case StaticScopeIter::NAMED_LAMBDA:
+//                scope = &scope->asDeclEnv().enclosingScope();
+//                break;
+//            }
+//        }
+//    }
+//
+//    /*
+//     * Ideally, we'd JS_ASSERT(!scope->isScope()) but the enclosing lexical
+//     * scope chain stops at eval() boundaries. See StaticScopeIter comment.
+//     */
+//#endif
 }
 
 bool

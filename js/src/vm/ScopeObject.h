@@ -182,10 +182,12 @@ class CallObject : public ScopeObject
 {
     static const uint32_t CALLEE_SLOT = 1;
 
+public:
+    // _DB_ This method was not public
     static CallObject *
     create(JSContext *cx, HandleScript script, HandleObject enclosing, HandleFunction callee);
 
-  public:
+// _DB_  public:
     /* These functions are internal and are exposed only for JITs. */
     static CallObject *
     create(JSContext *cx, HandleShape shape, HandleTypeObject type, HeapSlot *slots);

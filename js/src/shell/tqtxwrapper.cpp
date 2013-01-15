@@ -1,14 +1,4 @@
-/*
- * tqtxwrapper.cpp
- *
- *  Created on: Nov 16, 2012
- *      Author: usiusi
- */
-
-
-
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=99:
+/* vim: set ts=8 sw=4 et tw=99:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -16,7 +6,7 @@
  * The contents of this file are subject to the Mozilla Public License Version
  * 1.1 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
+ * http: //www.mozilla.org/MPL/
  *
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
@@ -27,11 +17,16 @@
  *
  * The Initial Developer of the Original Code is
  * Mozilla Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2012
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
  *   Fadi Meawad <fmeawad@mozilla.com>
+ *
+ * The code has been forked from the Original Code to the TigerQuoll project.
+ *
+ * Contributor(s):
+ *   Daniele Bonetta <bonettad@usi.ch>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),

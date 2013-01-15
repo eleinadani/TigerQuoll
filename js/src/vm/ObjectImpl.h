@@ -991,6 +991,10 @@ class ObjectImpl : public gc::Cell
     HeapSlot *slots;     /* Slots for object properties. */
     HeapSlot *elements;  /* Slots for object elements. */
 
+    /* _DB_ TxVersion */
+
+    tq::tx::VersionedLock* _verlock;
+
   private:
     static void staticAsserts() {
         MOZ_STATIC_ASSERT(sizeof(ObjectImpl) == sizeof(shadow::Object),

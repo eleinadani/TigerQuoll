@@ -1,12 +1,3 @@
-/*
- * tqtxmembrane.cpp
- *
- *  Created on: Nov 13, 2012
- *      Author: usiusi
- */
-
-
-
 /* vim: set ts=8 sw=4 et tw=99:
  *
  * ***** BEGIN LICENSE BLOCK *****
@@ -33,6 +24,11 @@
  * Nicholas Matsakis <nmatsakis@mozilla.com>
  * Donovan Preston <dpreston@mozilla.com>
  * Fadi Meawad <fmeawad@mozilla.com>
+ *
+ * The code has been forked from the Original Code to the TigerQuoll project.
+ *
+ * Contributor(s):
+ *   Daniele Bonetta <bonettad@usi.ch>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),

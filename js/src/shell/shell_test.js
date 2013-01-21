@@ -1,5 +1,5 @@
 
-load('/Users/usiusi/Dev/__github/TigerQuoll/js/src/shell/tq.js')
+load('tq.js')
 
 var o = {}
 
@@ -38,7 +38,7 @@ file.par(function(w) {
 			if(totals[id] == undefined)
 				totals[id] = 1
 			else
-				totals[id]++
+				totals[ecid]++
 		}
 	}
 })

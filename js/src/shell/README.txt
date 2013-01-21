@@ -47,6 +47,7 @@ You should now have a runnig version of TigerQuoll's shell in
 ===============================================================================
 
 Detailed instructions can be found here:
+x
 https://developer.mozilla.org/en-US/docs/SpiderMonkey/
 Setting_up_CDT_to_work_on_SpiderMonkey
 

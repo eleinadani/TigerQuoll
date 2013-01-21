@@ -18,7 +18,6 @@ CPPSRCS		= \
   jsheaptools.cpp \
   tqtxmembrane.cpp \
   tqtxwrapper.cpp \
-  tqtxproxy.cpp \
   tqevent.cpp \
   tqworker.cpp \
   $(NULL)
